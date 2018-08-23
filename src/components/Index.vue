@@ -11,14 +11,14 @@
         <input type="text" placeholder="Percent" v-model="percent">
       </div>
       <div class="col s3 m1">
-        <input type="text" placeholder="Balance" v-model="balance" @keyup.enter="calculateBalanceAndDate">
+        <input type="text" placeholder="Balance" v-model="balance" @keyup.enter="calculateBalanceDatePrice">
       </div>
       <div class="col s2 m1">
         <a
           class="btn-floating green lighten-1 tooltipped"
           data-position="top"
           data-tooltip="Calculate"
-          @click="calculateBalanceAndDate">
+          @click="this.calculateBalanceDateBTC">
           <i class="material-icons">mode_edit</i></a>
       </div>
       <div class="col s2 m1">
@@ -59,6 +59,7 @@
   });
 
   // :class="{ 'light-blue lighten-5' : isToday(day.date)}"
+  import {mapActions} from 'vuex';
   import Datepicker from 'vuejs-datepicker';
   import moment from 'moment'
   import db from '@/firebase/init'
@@ -69,7 +70,19 @@
       Datepicker
     },
     methods: {
-      calculateBalanceAndDate() {
+      ...mapActions([
+        'calculateBalanceDateBTC',
+        'setDays',
+        'setPercent',
+        'setBalance',
+        'setTo',
+        'setFrom',
+        'setDays'
+      ]),
+      calculateBalanceDatePrice() {
+
+        //this.$store.dispatch('calculateBalanceDateBTC');
+
         let to = moment(this.$store.state.to)
         let from = moment(this.$store.state.from)
         let balance = this.$store.state.balance
@@ -103,11 +116,7 @@
         }
       },
       clear() {
-        this.from = new Date();
-        this.to = new Date();
-        this.balance = null;
-        this.percent = null;
-        this.days = []
+
       },
     },
     computed: {
@@ -124,7 +133,7 @@
           return this.$store.state.balance
         },
         set(balance) {
-          this.$store.dispatch('setBalance', balance)
+          this.setBalance(balance)
         }
       },
       dateTo: {
@@ -132,7 +141,7 @@
           return this.$store.state.to
         },
         set(to) {
-          this.$store.dispatch('setTo', to)
+          this.setTo(to)
         }
       },
       dateFrom: {
@@ -140,7 +149,7 @@
           return this.$store.state.from
         },
         set(from) {
-          this.$store.dispatch('setFrom', from)
+          this.setFrom(from)
         }
       },
       days: {
@@ -148,7 +157,7 @@
           return this.$store.state.days
         },
         set(days) {
-          this.$store.dispatch('setDays', days)
+          this.setDays(days)
         }
       }
     }

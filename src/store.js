@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
-import moment from 'moment';
+import moment from 'moment'
+import db from '@/firebase/init'
 
 Vue.use(Vuex)
 
@@ -39,6 +40,9 @@ const actions = {
   },
   setDays({commit}, payload){
     commit('SET_DAYS', payload)
+  },
+  calculateBalanceDatePrice({commit}, payload){
+    commit('SET_BALANCE_DATE_PRICE', payload)
   }
 };
 
@@ -62,6 +66,9 @@ const mutations = {
       date: payload.date,
       balance: payload.balance.toFixed(4)
     })
+  },
+  'SET_BALANCE_DATE_PRICE'(state,payload){
+
   }
 };
 
