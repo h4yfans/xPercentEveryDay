@@ -1,30 +1,23 @@
 import Vue from 'vue'
+import VueResource from 'vue-resource'
 import Vuex from 'vuex'
 import moment from 'moment'
 import db from '@/firebase/init'
 
+
 Vue.use(Vuex)
+Vue.use(VueResource)
 
 const state = {
-  days: [
-   /* {date: moment('2015-03-25T12:00:00Z').format('MMM Do'), balance: 1000},
-    {date: moment('2015-03-26T12:00:00Z').format('MMM Do'), balance: 2000},
-    {date: moment('2015-03-27T12:00:00Z').format('MMM Do'), balance: 3000},
-    {date: moment('2015-03-28T12:00:00Z').format('MMM Do'), balance: 4000},
-    {date: moment('2015-03-29T12:00:00Z').format('MMM Do'), balance: 5000},
-    {date: moment('2015-03-30T12:00:00Z').format('MMM Do'), balance: 6000},*/
-  ],
+  days: [],
   from: new Date(),
   to: new Date(),
   percent: null,
-  balance: null
+  balance: null,
+  price: null,
 };
 
 
-//  action mutation commit ediyor.
-//  components üzerinden iletişime geçirilir
-//  dispatch edilir
-//  payload
 const actions = {
   setPercent({commit}, percent) {
     commit('SET_PERCENT', percent)
@@ -38,16 +31,18 @@ const actions = {
   setFrom({commit}, from) {
     commit('SET_FROM', from)
   },
-  setDays({commit}, payload){
+  setDays({commit}, payload) {
     commit('SET_DAYS', payload)
   },
-  calculateBalanceDatePrice({commit}, payload){
-    commit('SET_BALANCE_DATE_PRICE', payload)
+  calculateBalanceDateBTC({commit}) {
+    Vue.http.get('https://api.coindesk.com/v1/bpi/currentprice.json')
+      .then(data => {
+        commit('CALCULATE_BALANCE_DATE_BTC', {price: data.body.bpi.USD.rate_float})
+      })
+      .catch(err => console.log(err))
   }
 };
 
-
-//state'e eşitle
 const mutations = {
   "SET_PERCENT"(state, percent) {
     state.percent = percent
@@ -61,18 +56,53 @@ const mutations = {
   "SET_FROM"(state, from) {
     state.from = from
   },
-  'SET_DAYS'(state, payload){
+  'SET_DAYS'(state, payload) {
     state.days.push({
       date: payload.date,
       balance: payload.balance.toFixed(4)
     })
   },
-  'SET_BALANCE_DATE_PRICE'(state,payload){
+  'CALCULATE_BALANCE_DATE_BTC'(state, price) {
+    let to = moment(state.to);
+    let from = moment(state.from);
+    let balance = state.balance;
+    let percent = state.percent;
+    let diffDays = to.diff(from, 'days') + 1;
 
+    let processedBalance = Number(balance);
+    let processedDate = null;
+    state.price = price;
+
+    for (let i = 0; i < diffDays; i++) {
+      processedBalance += (processedBalance / 100) * percent;
+      processedDate = moment(from).add(i, 'days').format('MMM Do');
+      state.days.push({
+        date: processedDate,
+        balance: processedBalance.toFixed(4)
+      })
+    }
+
+    //console.log(JSON.stringify(state.days))
   }
 };
 
-const getters = {};
+const getters = {
+  getPercent: state => {
+    return state.percent;
+  },
+  getBalance: state => {
+    return state.balance;
+  },
+  getTo: state => {
+    return state.to;
+  },
+  getFrom: state => {
+    return state.from;
+  },
+  getDays: state => {
+    return state.days
+  }
+};
 
 
 const store = new Vuex.Store({

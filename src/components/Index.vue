@@ -40,7 +40,7 @@
     </div>
     <div class="days">
       <div class="row">
-        <div class="col s4 m2" v-for="day in days">
+        <div class="col s4 m2" v-for="(day,index) in days" :key="index">
           <div class="card">
             <div class="card-content center">
               <div class="red-text">{{day.date}}</div>
@@ -57,11 +57,9 @@
   $(document).ready(function () {
     $('.tooltipped').tooltip();
   });
-
   // :class="{ 'light-blue lighten-5' : isToday(day.date)}"
-  import {mapActions} from 'vuex';
+  import {mapActions, mapGetters} from 'vuex';
   import Datepicker from 'vuejs-datepicker';
-  import moment from 'moment'
   import db from '@/firebase/init'
 
   export default {
@@ -79,26 +77,6 @@
         'setFrom',
         'setDays'
       ]),
-      calculateBalanceDatePrice() {
-
-        //this.$store.dispatch('calculateBalanceDateBTC');
-
-        let to = moment(this.$store.state.to)
-        let from = moment(this.$store.state.from)
-        let balance = this.$store.state.balance
-        let percent = this.$store.state.percent
-        let diffDays = to.diff(from, 'days') + 1;
-
-        let processedBalance = Number(balance);
-        let processedDate = new Date();
-
-        for (let i = 0; i < diffDays; i++) {
-          processedBalance += (processedBalance / 100) * percent;
-          processedDate = moment(from).add(i, 'days').format('MMM Do')
-
-          this.$store.dispatch('setDays', {date: processedDate, balance: processedBalance})
-        }
-      },
       save() {
         if (this.percent && this.balance) {
           db.collection('dates').add({
@@ -120,42 +98,59 @@
       },
     },
     computed: {
-      percent: {
-        get() {
-          return this.$store.state.percent
-        },
-        set(percent) {
-          this.$store.dispatch('setPercent', percent)
+      ...mapGetters([
+        'getPercent',
+        'getBalance',
+        'getTo',
+        'getFrom',
+        'getDays'
+      ]),
+      percent:
+        {
+          get() {
+            return this.getPercent;
+          }
+          ,
+          set(percent) {
+            this.setPercent(percent)
+          }
         }
-      },
+      ,
       balance: {
         get() {
-          return this.$store.state.balance
-        },
+          return this.getBalance
+        }
+        ,
         set(balance) {
           this.setBalance(balance)
         }
-      },
+      }
+      ,
       dateTo: {
         get() {
-          return this.$store.state.to
-        },
+          return this.getTo
+        }
+        ,
         set(to) {
           this.setTo(to)
         }
-      },
+      }
+      ,
       dateFrom: {
         get() {
-          return this.$store.state.from
-        },
+          return this.getFrom
+        }
+        ,
         set(from) {
           this.setFrom(from)
         }
-      },
+      }
+      ,
       days: {
         get() {
-          return this.$store.state.days
-        },
+          return this.getDays
+        }
+        ,
         set(days) {
           this.setDays(days)
         }
