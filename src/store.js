@@ -14,7 +14,7 @@ const state = {
   to: new Date(),
   percent: null,
   balance: null,
-  price: null,
+  USDValue: null,
 };
 
 
@@ -23,6 +23,7 @@ const actions = {
     commit('SET_PERCENT', percent)
   },
   setBalance({commit}, balance) {
+    balance = balance.replace(/,/g, '.');
     commit('SET_BALANCE', balance)
   },
   setTo({commit}, to) {
@@ -37,7 +38,7 @@ const actions = {
   calculateBalanceDateBTC({commit}) {
     Vue.http.get('https://api.coindesk.com/v1/bpi/currentprice.json')
       .then(data => {
-        commit('CALCULATE_BALANCE_DATE_BTC', {price: data.body.bpi.USD.rate_float})
+        commit('CALCULATE_BALANCE_DATE_BTC', data.body.bpi.USD.rate_float)
       })
       .catch(err => console.log(err))
   }
@@ -62,7 +63,7 @@ const mutations = {
       balance: payload.balance.toFixed(4)
     })
   },
-  'CALCULATE_BALANCE_DATE_BTC'(state, price) {
+  'CALCULATE_BALANCE_DATE_BTC'(state, USDValue) {
     let to = moment(state.to);
     let from = moment(state.from);
     let balance = state.balance;
@@ -71,11 +72,11 @@ const mutations = {
 
     let processedBalance = Number(balance);
     let processedDate = null;
-    state.price = price;
+    state.USDValue = USDValue;
 
     for (let i = 0; i < diffDays; i++) {
       processedBalance += (processedBalance / 100) * percent;
-      processedDate = moment(from).add(i, 'days').format('MMM Do');
+      processedDate = moment(from).add(i, 'days').format('ll');
       state.days.push({
         date: processedDate,
         balance: processedBalance.toFixed(4)
@@ -101,6 +102,9 @@ const getters = {
   },
   getDays: state => {
     return state.days
+  },
+  getUSDValue: state => {
+    return state.USDValue
   }
 };
 
