@@ -41,6 +41,26 @@ const actions = {
         commit('CALCULATE_BALANCE_DATE_BTC', data.body.bpi.USD.rate_float)
       })
       .catch(err => console.log(err))
+  },
+  saveToFirebase({commit, state}) {
+    if (state.percent && state.balance) {
+      db.collection('dates').add({
+        from: state.from,
+        to: state.to,
+        percent: state.percent,
+        balance: state.balance
+      }).then(() => {
+        M.toast({html: 'Saved', classes: 'rounded', displayLength: '1000'});
+      }).catch(err => {
+        console.log(err)
+      })
+    } else {
+      M.toast({html: 'Enter a value', classes: 'rounded', displayLength: '1000'})
+    }
+
+  },
+  clearInfos({commit}) {
+    commit('CLEAR_INFOS');
   }
 };
 
@@ -73,17 +93,24 @@ const mutations = {
     let processedBalance = Number(balance);
     let processedDate = null;
     state.USDValue = USDValue;
+    state.days = [];
 
     for (let i = 0; i < diffDays; i++) {
       processedBalance += (processedBalance / 100) * percent;
-      processedDate = moment(from).add(i, 'days').format('ll');
+      processedDate = moment(from).add(i, 'days');
       state.days.push({
         date: processedDate,
         balance: processedBalance.toFixed(4)
       })
     }
-
-    //console.log(JSON.stringify(state.days))
+  },
+  'CLEAR_INFOS'(state) {
+    state.days = []
+    state.from = new Date()
+    state.to = new Date()
+    state.percent = null
+    state.balance = null
+    state.USDValue = null
   }
 };
 

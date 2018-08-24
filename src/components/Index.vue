@@ -11,7 +11,7 @@
         <input type="text" placeholder="Percent" v-model="percent">
       </div>
       <div class="col s3 m2">
-        <input type="text" placeholder="Balance" v-model="balance" @keyup.enter="calculateBalanceDatePrice">
+        <input type="text" placeholder="BTC Balance" v-model="balance" @keyup.enter="calculateBalanceDateBTC">
       </div>
       <div class="col m4">
         <div class="col s2 m4">
@@ -35,19 +35,17 @@
             class="btn-floating blue tooltipped"
             data-position="top"
             data-tooltip="Firebase"
-            @click="save"><i
+            @click="saveDataToFirebase"><i
             class="material-icons">cloud_upload</i></a>
         </div>
       </div>
     </div>
     <div class="days">
-
-
       <div class="row">
-        <div class="col s3 m2"  v-for="day in days">
-          <div class="card blue-grey darken-1"  :class="{ 'grey darken-4' : isToday(day.date) }">
+        <div class="col s3 m2" v-for="day in days">
+          <div class="card blue-grey darken-1" :class="{ 'grey darken-4' : isToday(day.date) }">
             <div class="card-content white-text ">
-              <span>{{ day.date}} <span v-if="isToday(day.date)">| Today</span></span>
+              <span>{{ day.date | dateFormat }}</span>
             </div>
             <div class="card-action">
               <div class="price usd">{{ USDValue(day.balance) }}</div>
@@ -70,6 +68,7 @@
   import Datepicker from 'vuejs-datepicker';
   import db from '@/firebase/init'
   import moment from 'moment'
+
   export default {
     name: 'Index',
     components: {
@@ -83,36 +82,23 @@
         'setBalance',
         'setTo',
         'setFrom',
-        'setDays'
+        'setDays',
+        'clearInfos',
+        'saveToFirebase'
       ]),
-      save() {
-        if (this.percent && this.balance) {
-          db.collection('dates').add({
-            from: this.from,
-            to: this.to,
-            percent: this.percent,
-            balance: this.balance
-          }).then(() => {
-            M.toast({html: 'Saved', classes: 'rounded', displayLength: '1000'});
-          }).catch(err => {
-            console.log(err)
-          })
-        } else {
-          M.toast({html: 'Enter a value', classes: 'rounded', displayLength: '1000'})
-        }
+      saveDataToFirebase() {
+        this.saveToFirebase()
       },
       clear() {
-
+        this.clearInfos()
       },
       USDValue(balance) {
         let result = this.getUSDValue * Number(balance);
         return '$' + result.toFixed(0);
-       },
-      isToday(date){
-        console.log(moment(date).isSame(moment().format('ll')))
-        return moment(date).isSame(moment().format('ll'))
+      },
+      isToday(date) {
+        return date.isSame(moment(), 'day')
       }
-
     },
     computed: {
       ...mapGetters([
@@ -168,6 +154,11 @@
           this.setDays(days)
         }
       }
+    },
+    filters: {
+      dateFormat(date) {
+        return date.format('ll')
+      }
     }
   }
 </script>
@@ -182,20 +173,12 @@
     padding: 12px;
   }
 
-  .isToday{
-    background: #000000 !important;
-  }
-
-  .date{
-    font-size: 1em;
-  }
-
-  .price{
+  .price {
     font-size: 1.1em;
-    color:#ffab40;
+    color: #ffab40;
   }
-  
-  html{
+
+  html {
     background-color: #e7e7e7;
   }
 
